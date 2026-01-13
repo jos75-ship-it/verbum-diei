@@ -10,49 +10,171 @@
   <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;600&family=IM+Fell+English+SC&display=swap" rel="stylesheet">
 
   <style>
+    /* =========================
+       DARK ACADEMIA — BLEND MODE
+       (fundo transparente, sem “card”)
+       ========================= */
     :root{
-      --bg:#070709; --panel:rgba(18,17,19,.92);
-      --ink:#e9e2d6; --muted:rgba(233,226,214,.72);
-      --rule:rgba(233,226,214,.10); --accent:#c8ad78; --accent2:#9a855f;
-      --shadow:rgba(0,0,0,.62);
+      --bg: transparent;
+      --panel: transparent;
+      --ink: #e9e2d6;
+      --muted: rgba(233,226,214,.65);
+      --rule: rgba(233,226,214,.12);
+      --accent: #c8ad78;
+      --accent2:#9a855f;
+      --shadow: none;
     }
-    html,body{height:100%;margin:0;background:
-      radial-gradient(1200px 650px at 20% 10%, rgba(200,173,120,.10), transparent 60%),
-      radial-gradient(900px 550px at 85% 0%, rgba(233,226,214,.06), transparent 58%),
-      linear-gradient(180deg, rgba(255,255,255,.03), transparent 30%),
-      var(--bg); color:var(--ink); font-family:"EB Garamond", Georgia, serif;}
-    .wrap{min-height:100%;display:flex;align-items:center;justify-content:center;padding:18px}
-    .card{width:min(860px,96vw);border-radius:20px;background:
-      linear-gradient(180deg, rgba(255,255,255,.05), transparent 55%), var(--panel);
-      border:1px solid var(--rule);box-shadow:0 22px 70px var(--shadow);overflow:hidden;position:relative}
-    .card:before{content:"";position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.03) 1px, transparent 1px);
-      background-size:3px 3px;opacity:.18;pointer-events:none;mix-blend-mode:overlay}
-    .header{position:relative;padding:16px 22px 12px;border-bottom:1px solid var(--rule);
-      display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-    .title{font-family:"IM Fell English SC","EB Garamond",serif;letter-spacing:.08em;font-size:18px;display:flex;align-items:center;gap:10px}
-    .title .cross{color:var(--accent)}
-    .meta{display:flex;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:14px}
-    .pill{border:1px solid var(--rule);padding:6px 12px;border-radius:999px;background:rgba(0,0,0,.18);backdrop-filter:blur(6px)}
-    .body{position:relative;padding:18px 22px 18px}
-    .kicker{color:var(--accent);font-weight:600;letter-spacing:.02em;font-size:16px;margin:0 0 10px}
-    .ref{margin:0 0 12px;font-size:18px;color:rgba(233,226,214,.92);font-weight:600}
-    .quote{margin:0;padding:16px 18px;border:1px solid rgba(233,226,214,.12);background:rgba(0,0,0,.22);border-radius:16px;
-      box-shadow:inset 0 0 0 1px rgba(255,255,255,.02)}
-    .verse{margin:0;font-size:22px;line-height:1.5;letter-spacing:.01em}
-    .verse:before{content:"“";color:var(--accent2);font-size:38px;line-height:0;vertical-align:-10px;margin-right:6px}
-    .verse:after{content:"”";color:var(--accent2);font-size:38px;line-height:0;vertical-align:-10px;margin-left:6px}
-    .footer{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
-      color:var(--muted);font-size:13px}
-    a{color:var(--accent);text-decoration:none;border-bottom:1px dotted rgba(200,173,120,.55)}
-    a:hover{border-bottom-color:rgba(200,173,120,.95)}
-    .status{font-style:italic;color:rgba(233,226,214,.58)}
-    .skeleton{color:rgba(233,226,214,.60);font-style:italic}
+
+    html,body{
+      height:100%;
+      margin:0;
+      background: transparent; /* deixa o fundo do Notion aparecer */
+      color: var(--ink);
+      font-family: "EB Garamond", Georgia, serif;
+    }
+
+    /* ocupa a largura do embed sem criar “moldura” */
+    .wrap{
+      width:100%;
+      padding: 0;
+      margin: 0;
+    }
+
+    /* remove completamente a “moldura” */
+    .card{
+      width:100%;
+      background: transparent;
+      border: none;
+      border-radius: 0;
+      box-shadow: none;
+      overflow: visible;
+      position: relative;
+    }
+
+    /* header minimal, estilo Notion */
+    .header{
+      padding: 4px 0 10px 0;
+      border-bottom: 1px solid var(--rule);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+      flex-wrap:wrap;
+    }
+
+    .title{
+      font-family: "IM Fell English SC","EB Garamond",serif;
+      letter-spacing:.06em;
+      font-size: 16px;
+      display:flex;
+      align-items:center;
+      gap: 8px;
+      margin:0;
+    }
+    .title .cross{ color: var(--accent); }
+
+    .meta{
+      display:flex;
+      gap: 10px;
+      flex-wrap:wrap;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    /* pills discretos (pode apagar se quiser ainda mais minimal) */
+    .pill{
+      border:1px solid rgba(233,226,214,.10);
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: transparent; /* sem fundo */
+    }
+
+    .body{
+      padding: 12px 0 0 0;
+    }
+
+    .kicker{
+      color: var(--accent);
+      font-weight: 600;
+      letter-spacing:.02em;
+      font-size: 15px;
+      margin: 0 0 8px 0;
+    }
+
+    .ref{
+      margin: 0 0 10px 0;
+      font-size: 17px;
+      color: rgba(233,226,214,.92);
+      font-weight: 600;
+    }
+
+    /* bloco tipo “blockquote” do Notion (sem caixa) */
+    .quote{
+      margin: 0;
+      padding: 10px 0 4px 14px;
+      border-left: 2px solid var(--accent);
+      background: transparent;
+      border-radius: 0;
+    }
+
+    .verse{
+      margin:0;
+      font-size: 20px;
+      line-height: 1.55;
+      letter-spacing:.01em;
+    }
+
+    /* aspas mais discretas para não parecer “card externo” */
+    .verse:before{
+      content:"“";
+      color: rgba(200,173,120,.55);
+      font-size: 30px;
+      line-height: 0;
+      vertical-align: -8px;
+      margin-right: 6px;
+    }
+    .verse:after{
+      content:"”";
+      color: rgba(200,173,120,.55);
+      font-size: 30px;
+      line-height: 0;
+      vertical-align: -8px;
+      margin-left: 6px;
+    }
+
+    .footer{
+      margin-top: 8px;
+      padding-top: 6px;
+      border-top: none; /* sem linha extra */
+      display:flex;
+      justify-content:space-between;
+      gap: 12px;
+      flex-wrap:wrap;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    a{
+      color: var(--accent);
+      text-decoration: none;
+      border-bottom: 1px dotted rgba(200,173,120,.45);
+    }
+    a:hover{ border-bottom-color: rgba(200,173,120,.95); }
+
+    .status{
+      font-style: italic;
+      color: rgba(233,226,214,.52);
+    }
+    .skeleton{
+      color: rgba(233,226,214,.55);
+      font-style: italic;
+    }
   </style>
 </head>
 
 <body>
   <div class="wrap">
-    <div class="card">
+    <div class="card" role="article" aria-label="Versículo do dia">
       <div class="header">
         <div class="title"><span class="cross">✟</span>Verbum Diei</div>
         <div class="meta">
@@ -77,7 +199,7 @@
     </div>
   </div>
 
-  <!-- IMPORTANT: script externo -->
+  <!-- Mantém seu JS externo como está (main.js) -->
   <script src="./main.js" defer></script>
 </body>
 </html>
