@@ -1,83 +1,157 @@
-(function(){
+(function () {
   const refEl = document.getElementById("ref");
   const textEl = document.getElementById("text");
   const statusEl = document.getElementById("status");
-  const sourceLink = document.getElementById("sourceLink");
   const todayEl = document.getElementById("today");
 
-  // Se isso não rodar no Notion, a data vai continuar "—"
-  try{
+  // Cabeçalho com data (pt-BR)
+  try {
     const d = new Date();
-    const fmt = new Intl.DateTimeFormat("pt-BR", { weekday:"long", day:"2-digit", month:"long", year:"numeric" });
+    const fmt = new Intl.DateTimeFormat("pt-BR", {
+      weekday: "long",
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    });
     todayEl.textContent = fmt.format(d);
-  }catch(e){
-    // fallback simples
+  } catch {
     todayEl.textContent = new Date().toLocaleDateString("pt-BR");
   }
 
-  // Proxys (tentamos 2 opções, com timeout)
-  const bgJson = "https://www.biblegateway.com/votd/get?format=json&version=DRA";
+  // Página “Liturgia Diária” (pt-BR) — sem expor no UI
+  const LITURGIA_URL = "https://liturgia.cancaonova.com/pb/";
+
+  // Proxys para contornar CORS em embeds
   const endpoints = [
-    "https://r.jina.ai/" + bgJson,
-    "https://api.allorigins.win/raw?url=" + encodeURIComponent(bgJson),
+    "https://r.jina.ai/" + LITURGIA_URL,
+    "https://api.allorigins.win/raw?url=" + encodeURIComponent(LITURGIA_URL),
   ];
 
-  function stripHtml(html){
-    const tmp = document.createElement("div");
-    tmp.innerHTML = html.replace(/<br\s*\/?>/gi, "\n").replace(/<\/p>/gi, "\n\n");
-    const t = (tmp.textContent || tmp.innerText || "").replace(/\n{3,}/g, "\n\n").trim();
-    return t;
+  function normalizeSpaces(s) {
+    return s
+      .replace(/\r/g, "")
+      .replace(/[ \t]+\n/g, "\n")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
   }
 
-  function extractJson(text){
-    const start = text.indexOf("{");
-    const end = text.lastIndexOf("}");
-    if (start === -1 || end === -1 || end <= start) throw new Error("JSON não encontrado");
-    return JSON.parse(text.slice(start, end + 1));
+  function stripTagsToText(html) {
+    // remove scripts/styles
+    html = html.replace(/<script[\s\S]*?<\/script>/gi, "");
+    html = html.replace(/<style[\s\S]*?<\/style>/gi, "");
+
+    // converte <br> e fechamentos de parágrafo em quebras
+    html = html.replace(/<br\s*\/?>/gi, "\n");
+    html = html.replace(/<\/p>/gi, "\n\n");
+    html = html.replace(/<\/h\d>/gi, "\n\n");
+    html = html.replace(/<\/li>/gi, "\n");
+    html = html.replace(/<\/div>/gi, "\n");
+
+    // remove tags restantes
+    html = html.replace(/<[^>]+>/g, "");
+
+    // decodifica entidades comuns
+    html = html
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">");
+
+    return normalizeSpaces(html);
   }
 
-  async function fetchWithTimeout(url, ms){
+  function extractGospel(text) {
+    // Procurar a âncora do Evangelho
+    // Ex: "Evangelho (Mc 1,14-20)"
+    const mRef = text.match(/Evangelho\s*\(([^)]+)\)/i);
+    if (!mRef) throw new Error("Não encontrei a seção do Evangelho.");
+
+    const ref = mRef[1].trim();
+
+    // Cortar do Evangelho até "Palavra da Salvação"
+    const startIdx = text.search(/Evangelho\s*\([^)]+\)/i);
+    let chunk = text.slice(startIdx);
+
+    // fim
+    const endMatch = chunk.search(/Palavra da Salvação/i);
+    if (endMatch !== -1) chunk = chunk.slice(0, endMatch);
+
+    // Remover cabeçalhos litúrgicos desnecessários
+    // Mantemos apenas o texto do Evangelho, de preferência iniciando no primeiro versículo.
+    // Normalmente aparece "Proclamação do Evangelho..." e depois "-Glória..."
+    const gloryIdx = chunk.search(/Gl[oó]ria a v[oó]s,\s*Senhor/i);
+    if (gloryIdx !== -1) {
+      chunk = chunk.slice(gloryIdx);
+      // corta a linha do "Glória..." para começar no texto
+      const afterLine = chunk.indexOf("\n");
+      if (afterLine !== -1) chunk = chunk.slice(afterLine + 1);
+    } else {
+      // se não achou, tenta cortar após a linha "Proclamação..."
+      const proclIdx = chunk.search(/Proclama[cç][aã]o do Evangelho/i);
+      if (proclIdx !== -1) {
+        chunk = chunk.slice(proclIdx);
+        const afterLine = chunk.indexOf("\n");
+        if (afterLine !== -1) chunk = chunk.slice(afterLine + 1);
+      }
+    }
+
+    // Limpeza final: remove linhas muito “rubrica”
+    // (Aleluia, Louvai, Coragem etc. ficam se estiverem no texto; só tiramos rubricas padrão)
+    chunk = chunk
+      .replace(/^-?\s*Gl[oó]ria a v[oó]s,\s*Senhor\.?\s*$/gim, "")
+      .replace(/^-?\s*Palavra do Senhor\.?\s*$/gim, "")
+      .replace(/^-?\s*Gra[cç]as a Deus\.?\s*$/gim, "")
+      .trim();
+
+    // Se ficar vazio, falhar
+    if (!chunk || chunk.length < 20) throw new Error("Texto do Evangelho vazio.");
+
+    return { ref, gospel: normalizeSpaces(chunk) };
+  }
+
+  async function fetchWithTimeout(url, ms) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), ms);
-    try{
-      const res = await fetch(url, { cache:"no-store", signal: controller.signal });
-      if(!res.ok) throw new Error("HTTP " + res.status);
+    try {
+      const res = await fetch(url, { cache: "no-store", signal: controller.signal });
+      if (!res.ok) throw new Error("HTTP " + res.status);
       return await res.text();
     } finally {
       clearTimeout(timer);
     }
   }
 
-  async function run(){
-    for (let i=0;i<endpoints.length;i++){
-      const url = endpoints[i];
-      try{
-        statusEl.textContent = "Carregando…";
-        const raw = await fetchWithTimeout(url, 7000);
-        const data = extractJson(raw);
+  async function run() {
+    statusEl.textContent = "Carregando…";
+    refEl.textContent = "Carregando…";
+    textEl.textContent = "Carregando o Evangelho do dia…";
 
-        const reference = data.reference || (data.votd && data.votd.reference) || "Versículo do Dia";
-        const htmlText  = data.text || (data.votd && data.votd.text) || "";
-        if(!htmlText) throw new Error("sem texto");
+    for (const url of endpoints) {
+      try {
+        const raw = await fetchWithTimeout(url, 9000);
 
-        refEl.textContent = reference;
-        textEl.textContent = stripHtml(htmlText);
+        // alguns proxys podem “prefixar” conteúdo; tentamos achar o começo do HTML
+        const htmlStart = raw.search(/<!doctype html|<html/i);
+        const html = htmlStart !== -1 ? raw.slice(htmlStart) : raw;
 
-        const link = data.url || ("https://www.biblegateway.com/passage/?search=" + encodeURIComponent(reference) + "&version=DRA");
-        sourceLink.href = link;
+        const text = stripTagsToText(html);
+        const { ref, gospel } = extractGospel(text);
 
-        statusEl.textContent = "Atualiza automaticamente.";
+        refEl.textContent = ref;
+        textEl.textContent = gospel;
+        statusEl.textContent = "Atualiza diariamente.";
         return;
-      }catch(e){
+      } catch (e) {
         // tenta o próximo endpoint
       }
     }
 
-    // Se tudo falhar:
+    // se todos falharem:
     refEl.textContent = "Indisponível no momento";
-    textEl.textContent = "Toque em “BibleGateway” para abrir o Versículo do Dia.";
-    statusEl.textContent = "Falha de rede/CORS no embed.";
-    sourceLink.href = "https://www.biblegateway.com/votd";
+    textEl.textContent = "Não foi possível carregar o Evangelho do dia. Tente recarregar mais tarde.";
+    statusEl.textContent = "Falha de rede/CORS.";
   }
 
   run();
