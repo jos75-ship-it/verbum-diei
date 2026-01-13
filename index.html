@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Verbum Diei • Douay-Rheims</title>
+  <title>Liturgia Diária</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,147 +11,140 @@
 
   <style>
     /* =========================
-       DARK ACADEMIA — BLEND MODE
-       (fundo transparente, sem “card”)
+       LITURGIA DIÁRIA — BLEND
+       transparente + moldura fina
        ========================= */
+
     :root{
-      --bg: transparent;
-      --panel: transparent;
       --ink: #e9e2d6;
       --muted: rgba(233,226,214,.65);
-      --rule: rgba(233,226,214,.12);
+      --rule: rgba(233,226,214,.18);
       --accent: #c8ad78;
-      --accent2:#9a855f;
-      --shadow: none;
     }
 
     html,body{
       height:100%;
       margin:0;
-      background: transparent; /* deixa o fundo do Notion aparecer */
+      background: transparent;
       color: var(--ink);
       font-family: "EB Garamond", Georgia, serif;
     }
 
-    /* ocupa a largura do embed sem criar “moldura” */
     .wrap{
       width:100%;
-      padding: 0;
-      margin: 0;
+      margin:0;
+      padding: 6px 0;
     }
 
-    /* remove completamente a “moldura” */
-    .card{
-      width:100%;
+    /* moldura fina, adaptável ao Notion */
+    .frame{
+      border: 1px solid var(--rule);
+      border-radius: 10px;
+      padding: 12px 14px 14px 14px;
       background: transparent;
-      border: none;
-      border-radius: 0;
-      box-shadow: none;
-      overflow: visible;
-      position: relative;
     }
 
-    /* header minimal, estilo Notion */
     .header{
-      padding: 4px 0 10px 0;
-      border-bottom: 1px solid var(--rule);
       display:flex;
       align-items:center;
       justify-content:space-between;
       gap: 12px;
       flex-wrap:wrap;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--rule);
+      margin-bottom: 10px;
     }
 
     .title{
       font-family: "IM Fell English SC","EB Garamond",serif;
       letter-spacing:.06em;
-      font-size: 16px;
+      font-size: 15px;
       display:flex;
       align-items:center;
       gap: 8px;
       margin:0;
     }
-    .title .cross{ color: var(--accent); }
+
+    .title .cross{
+      color: var(--accent);
+      font-size: 14px;
+    }
 
     .meta{
       display:flex;
-      gap: 10px;
+      gap: 8px;
       flex-wrap:wrap;
       color: var(--muted);
-      font-size: 13px;
+      font-size: 12px;
     }
 
-    /* pills discretos (pode apagar se quiser ainda mais minimal) */
     .pill{
-      border:1px solid rgba(233,226,214,.10);
-      padding: 5px 10px;
+      border:1px solid rgba(233,226,214,.14);
+      padding: 4px 9px;
       border-radius: 999px;
-      background: transparent; /* sem fundo */
+      background: transparent;
     }
 
     .body{
-      padding: 12px 0 0 0;
+      padding: 6px 0 0 0;
     }
 
     .kicker{
       color: var(--accent);
       font-weight: 600;
       letter-spacing:.02em;
-      font-size: 15px;
-      margin: 0 0 8px 0;
+      font-size: 14px;
+      margin: 0 0 6px 0;
     }
 
     .ref{
-      margin: 0 0 10px 0;
-      font-size: 17px;
-      color: rgba(233,226,214,.92);
+      margin: 0 0 8px 0;
+      font-size: 16px;
       font-weight: 600;
+      color: rgba(233,226,214,.95);
     }
 
-    /* bloco tipo “blockquote” do Notion (sem caixa) */
+    /* bloco tipo citação (integrado ao Notion) */
     .quote{
       margin: 0;
-      padding: 10px 0 4px 14px;
+      padding: 8px 0 4px 12px;
       border-left: 2px solid var(--accent);
       background: transparent;
-      border-radius: 0;
     }
 
     .verse{
       margin:0;
-      font-size: 20px;
+      font-size: 18px;
       line-height: 1.55;
       letter-spacing:.01em;
     }
 
-    /* aspas mais discretas para não parecer “card externo” */
     .verse:before{
       content:"“";
       color: rgba(200,173,120,.55);
-      font-size: 30px;
+      font-size: 26px;
       line-height: 0;
-      vertical-align: -8px;
+      vertical-align: -6px;
       margin-right: 6px;
     }
     .verse:after{
       content:"”";
       color: rgba(200,173,120,.55);
-      font-size: 30px;
+      font-size: 26px;
       line-height: 0;
-      vertical-align: -8px;
+      vertical-align: -6px;
       margin-left: 6px;
     }
 
     .footer{
       margin-top: 8px;
       padding-top: 6px;
-      border-top: none; /* sem linha extra */
       display:flex;
       justify-content:space-between;
-      gap: 12px;
+      gap: 10px;
       flex-wrap:wrap;
       color: var(--muted);
-      font-size: 12px;
+      font-size: 11px;
     }
 
     a{
@@ -159,12 +152,13 @@
       text-decoration: none;
       border-bottom: 1px dotted rgba(200,173,120,.45);
     }
-    a:hover{ border-bottom-color: rgba(200,173,120,.95); }
+    a:hover{ border-bottom-color: rgba(200,173,120,.9); }
 
     .status{
       font-style: italic;
-      color: rgba(233,226,214,.52);
+      color: rgba(233,226,214,.55);
     }
+
     .skeleton{
       color: rgba(233,226,214,.55);
       font-style: italic;
@@ -174,32 +168,36 @@
 
 <body>
   <div class="wrap">
-    <div class="card" role="article" aria-label="Versículo do dia">
+    <div class="frame" role="article" aria-label="Liturgia Diária">
       <div class="header">
-        <div class="title"><span class="cross">✟</span>Verbum Diei</div>
+        <div class="title">
+          <span class="cross">✟</span>
+          Liturgia Diária
+        </div>
         <div class="meta">
           <span class="pill" id="today">—</span>
-          <span class="pill">Douay-Rheims (DRA)</span>
         </div>
       </div>
 
       <div class="body">
-        <p class="kicker">Versículo do Dia</p>
+        <p class="kicker">Evangelho do Dia</p>
         <p class="ref" id="ref">Carregando…</p>
 
         <div class="quote">
-          <p class="verse" id="text"><span class="skeleton">Obtendo o “Verse of the Day”…</span></p>
+          <p class="verse" id="text">
+            <span class="skeleton">Carregando o Evangelho do dia…</span>
+          </p>
         </div>
 
         <div class="footer">
-          <span>Fonte: <a id="sourceLink" href="https://www.biblegateway.com/votd" target="_blank" rel="noopener">BibleGateway</a></span>
+          <span>Texto litúrgico (CNBB)</span>
           <span class="status" id="status">—</span>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Mantém seu JS externo como está (main.js) -->
+  <!-- mantém o JS externo -->
   <script src="./main.js" defer></script>
 </body>
 </html>
